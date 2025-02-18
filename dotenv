@@ -1,0 +1,42 @@
+### SERVER
+
+NODE_ENV = local
+PORT = 8080
+TIME_ZONE = Asia/Seoul
+CORS = *
+CORS_CREDENTIALS = true
+COOKIE_SECRET =
+
+### DATABASE
+
+DB_HOST =
+DB_PORT = 5432
+DB_USERNAME =
+DB_PASSWORD =
+DB_NAME = aroma
+DB_AUTO_SYNC = false
+
+### AUTH
+
+JWT_SECRET =
+JWT_EXPIRED = 1d
+
+### CACHING
+
+REDIS_HOST = redis-stack
+REDIS_PORT = 6379
+REDIS_TTL = 3600
+
+### ORM
+
+MIKRO_ORM_TYPE = postgresql
+MIKRO_ORM_DB_NAME = ${DB_NAME}
+MIKRO_ORM_USER = ${DB_USERNAME}
+MIKRO_ORM_PASSWORD = ${DB_PASSWORD}
+MIKRO_ORM_ENTITIES = ./dist/database/entity/_.entity.js
+MIKRO_ORM_ENTITIES_TS = ./src/database/entity/_.entity.ts
+MIKRO_ORM_MIGRATIONS_TABLE_NAME = migrations
+MIKRO_ORM_MIGRATIONS_PATH = ./dist/database/migration
+MIKRO_ORM_MIGRATIONS_PATH_TS = ./src/database/migration
+MIKRO_ORM_SEEDER_PATH = ./dist/database/seed
+MIKRO_ORM_SEEDER_PATH_TS = ./src/database/seed
