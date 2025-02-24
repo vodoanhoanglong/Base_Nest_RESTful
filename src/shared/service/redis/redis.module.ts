@@ -1,24 +1,26 @@
-import { ENVIRONMENT } from "@core/config/env.config";
-import { CacheModule } from "@nestjs/cache-manager";
-import { Module } from "@nestjs/common";
-import { redisStore } from "cache-manager-redis-store";
-import { RedisService } from "./redis.service";
+import { initRedisConfig, REDIS_CLIENT } from "@core/config/redis.config";
+import { Global, Module } from "@nestjs/common";
+import { getMessage } from "@shared/constant/message.constant";
+import { MessageCode } from "@shared/enum/message-code.enum";
+import { WinstonLogger } from "@shared/service/logger/winston.logger";
+import { RedisService } from "@shared/service/redis/redis.service";
+import Redis from "ioredis";
 
+@Global()
 @Module({
-  imports: [
-    CacheModule.registerAsync({
-      useFactory: async () => ({
-        store: await redisStore({
-          socket: {
-            host: ENVIRONMENT.REDIS_HOST,
-            port: ENVIRONMENT.REDIS_PORT,
-          },
-          ttl: ENVIRONMENT.REDIS_TTL,
-        }),
-      }),
-    }),
+  providers: [
+    RedisService,
+    {
+      provide: REDIS_CLIENT,
+      useFactory: async () => {
+        const client = new Redis(initRedisConfig());
+        client.on("error", (error) => WinstonLogger.error(getMessage(MessageCode.RedisFailedToConnect, error.message)));
+        client.on("connect", () => WinstonLogger.info(getMessage(MessageCode.RedisConnected)));
+
+        return client;
+      },
+    },
   ],
-  providers: [RedisService],
   exports: [RedisService],
 })
 export class RedisModule {}

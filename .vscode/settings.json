@@ -18,5 +18,5 @@
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "javascript.preferences.importModuleSpecifier": "non-relative",
-  "cSpell.words": ["Mikro"]
+  "cSpell.words": ["Chemi", "coolsms", "KAKAO", "Mikro", "PFID"]
 }

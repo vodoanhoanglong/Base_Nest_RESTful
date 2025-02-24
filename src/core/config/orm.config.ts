@@ -2,9 +2,9 @@ import { ENVIRONMENT } from "@core/config/env.config";
 import { defineConfig, ReflectMetadataProvider } from "@mikro-orm/postgresql";
 import { TsMorphMetadataProvider } from "@mikro-orm/reflection";
 import { SqlHighlighter } from "@mikro-orm/sql-highlighter";
-import { getErrorMessage } from "@shared/constant/error-message.constant";
 import { NodeEnv } from "@shared/enum/environment.enum";
 import { ErrorCode } from "@shared/enum/error-code.enum";
+import { CustomError } from "@shared/helper/error";
 import { WinstonLogger } from "@shared/service/logger/winston.logger";
 
 export const initOrmConfig = () =>
@@ -18,7 +18,7 @@ export const initOrmConfig = () =>
     autoJoinOneToOneOwner: false,
     migrations: {
       fileName: (timestamp: string, name?: string) => {
-        if (!name) throw new Error(getErrorMessage(ErrorCode.MissingMigrationFilename));
+        if (!name) throw new CustomError(ErrorCode.MissingMigrationFilename);
         return `${timestamp}_${name}`;
       },
     },

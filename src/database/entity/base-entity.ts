@@ -9,14 +9,14 @@ export abstract class BaseEntity {
   isActive = true;
 
   @Property({ defaultRaw: "EXTRACT(EPOCH FROM NOW())" })
-  createdAt?: number;
+  createdAt: number;
 
-  @Property({ onUpdate: () => "EXTRACT(EPOCH FROM NOW())" })
+  @Property({ onUpdate: () => "EXTRACT(EPOCH FROM NOW())", nullable: true })
   updatedAt?: number;
 
-  @ManyToOne({ entity: () => Account, fieldName: "created_by" })
+  @ManyToOne({ entity: () => Account, fieldName: "created_by", nullable: true })
   creator?: Account;
 
-  @ManyToOne({ entity: () => Account, fieldName: "updated_by" })
+  @ManyToOne({ entity: () => Account, fieldName: "updated_by", nullable: true })
   updater?: Account;
 }

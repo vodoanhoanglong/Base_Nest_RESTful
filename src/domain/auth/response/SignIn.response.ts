@@ -5,12 +5,14 @@ export class SignInResponse {
   id: string;
   role: Role;
   accessToken: string;
+  refreshToken: string;
 
-  static fromEntity(account: Account, token: string): SignInResponse {
+  static fromEntity(account: Account, accessToken: string, refreshToken: string): SignInResponse {
     return {
       id: account.id,
       role: account.role,
-      accessToken: token,
+      accessToken,
+      refreshToken,
     };
   }
 }

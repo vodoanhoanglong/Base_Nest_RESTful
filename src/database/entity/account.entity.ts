@@ -17,6 +17,6 @@ export class Account extends BaseEntity {
   @TextProperty()
   password: string;
 
-  @Enum()
+  @Enum({ items: () => Role })
   role: Role;
 }

@@ -1,4 +1,7 @@
 import { AuthService } from "@domain/auth/auth.service";
+import { ConfirmVerificationRequest } from "@domain/auth/request/ConfirmVerification.request";
+import { RefreshTokenRequest } from "@domain/auth/request/RefreshToken.request";
+import { SendVerificationRequest } from "@domain/auth/request/SendVerification.request";
 import { SignInRequest } from "@domain/auth/request/SignIn.request";
 import { SignUpRequest } from "@domain/auth/request/SignUp.request";
 import { Body, Controller, Post } from "@nestjs/common";
@@ -16,5 +19,20 @@ export class AuthController {
   @Post("sign-up")
   signUp(@Body() request: SignUpRequest) {
     return this.authService.signUp(request);
+  }
+
+  @Post("send-verification")
+  sendVerification(@Body() request: SendVerificationRequest) {
+    return this.authService.sendVerification(request);
+  }
+
+  @Post("confirm-verification")
+  confirmVerification(@Body() request: ConfirmVerificationRequest) {
+    return this.authService.confirmVerification(request);
+  }
+
+  @Post("refresh-token")
+  refreshNewToken(@Body() request: RefreshTokenRequest) {
+    return this.authService.refreshNewToken(request);
   }
 }

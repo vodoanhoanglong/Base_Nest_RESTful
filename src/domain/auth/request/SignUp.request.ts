@@ -1,7 +1,8 @@
 import { Account } from "@database/entity/account.entity";
+import { REGEX_USER_PASSWORD } from "@shared/constant/regex.constant";
 import { Role } from "@shared/enum/role.enum";
 import { Transform } from "class-transformer";
-import { IsEmail, IsNotEmpty, IsOptional, IsPhoneNumber, IsString } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from "class-validator";
 
 export class SignUpRequest {
   @Transform(({ value }) => typeof value === "string" && value.toLowerCase())
@@ -11,22 +12,24 @@ export class SignUpRequest {
 
   @IsString()
   @IsNotEmpty()
+  @MinLength(8)
+  @Matches(REGEX_USER_PASSWORD)
   password: string;
 
-  @IsOptional()
   @IsString()
-  name?: string;
+  @IsNotEmpty()
+  name: string;
 
-  @IsOptional()
-  @IsPhoneNumber()
-  phoneNumber?: string;
+  @IsString()
+  @IsNotEmpty()
+  phoneNumber: string;
 
   static toCreateInput(request: SignUpRequest, hashedPassword: string) {
     return {
-      email: request.email,
-      phoneNumber: request.phoneNumber,
       name: request.name,
+      email: request.email,
       password: hashedPassword,
+      phoneNumber: request.phoneNumber,
       role: Role.Member,
     } as Account;
   }

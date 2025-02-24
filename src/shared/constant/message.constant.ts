@@ -1,0 +1,20 @@
+import { MessageCode } from "@shared/enum/message-code.enum";
+import chalk from "chalk";
+
+const redisColorized = `[${chalk.bold.red("REDIS")}]`;
+
+const Message: Record<MessageCode, string | ((...param: unknown[]) => string)> = {
+  [MessageCode.ServerStarted]: (port: number) => `✅ Server ready at http://localhost:${port}`,
+  [MessageCode.ServerStartFailed]: (error) => `❌ Error while starting server, ${error}`,
+
+  [MessageCode.RedisConnected]: `${redisColorized} Connected`,
+  [MessageCode.RedisFailedToConnect]: (msg: string) => `${redisColorized} Failed to connect: ${msg}`,
+  [MessageCode.RedisRetrying]: (times: number, delay: number) =>
+    `${redisColorized} Connection retry, attempt ${times}, waiting for ${delay}ms`,
+  [MessageCode.RedisMaxRetryAttempt]: `${redisColorized} Stopping reconnection attempts. Max retry duration reached`,
+} as const;
+
+export function getMessage(code: MessageCode, ...param: unknown[]): string {
+  const message = Message[code];
+  return typeof message === "function" ? message(...param) : message;
+}

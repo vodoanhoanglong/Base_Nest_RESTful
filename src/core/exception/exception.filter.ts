@@ -1,8 +1,10 @@
+import { DriverException } from "@mikro-orm/core";
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from "@nestjs/common";
 import { getErrorMessage } from "@shared/constant/error-message.constant";
 import { ErrorCode } from "@shared/enum/error-code.enum";
+import { CustomError } from "@shared/helper/error";
 import { BaseResponse } from "@shared/helper/response";
-import { IException } from "@shared/interface/exception.interface";
+import { IException, IExceptionDetail } from "@shared/interface/exception.interface";
 import { WinstonLogger } from "@shared/service/logger/winston.logger";
 import chalk from "chalk";
 import * as moment from "moment";
@@ -14,16 +16,13 @@ export class UnhandledExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
     const request = ctx.getRequest();
     const response = ctx.getResponse();
-    const status =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : exception instanceof Error
-          ? HttpStatus.BAD_REQUEST
-          : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    const { statusCode, errorCode, message } = this.getExceptionDetail(exception);
 
     const errorResponse: IException = {
-      statusCode: status,
-      message: this.getExceptionMessage(exception),
+      statusCode,
+      errorCode,
+      message,
       method: request.method,
       path: request.url,
       timestamp: moment().toISOString(),
@@ -32,19 +31,41 @@ export class UnhandledExceptionFilter implements ExceptionFilter {
 
     WinstonLogger.error(`${chalk.redBright(UnhandledExceptionFilter.name)}`, { metadata: errorResponse });
     response
-      .status(status)
-      .json(BaseResponse.error(errorResponse.statusCode, errorResponse.message, errorResponse.exception));
+      .status(statusCode)
+      .json(
+        BaseResponse.exception(errorResponse.statusCode, errorCode, errorResponse.message, errorResponse.exception),
+      );
   }
 
-  private getExceptionMessage(exception: unknown): string {
-    if (exception instanceof Error) return exception.message;
+  private getExceptionDetail(exception: unknown): IExceptionDetail {
+    if (exception instanceof CustomError)
+      return { statusCode: HttpStatus.BAD_REQUEST, errorCode: exception.errorCode, message: exception.message };
+
+    if (exception instanceof DriverException)
+      return {
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+        errorCode: ErrorCode.DatabaseError,
+        message: exception.errmsg || getErrorMessage(ErrorCode.DatabaseError),
+      };
+
     if (exception instanceof HttpException) {
       const response = exception.getResponse();
 
-      if (typeof response === "string") return response;
-      if (typeof response === "object" && "message" in response) return response.message as string;
+      if (typeof response === "string")
+        return { statusCode: exception.getStatus(), errorCode: ErrorCode.HttpError, message: response };
+
+      if (typeof response === "object" && "message" in response)
+        return {
+          statusCode: exception.getStatus(),
+          errorCode: ErrorCode.HttpError,
+          message: response.message as string,
+        };
     }
 
-    return getErrorMessage(ErrorCode.UnknownError);
+    return {
+      statusCode: HttpStatus.BAD_REQUEST,
+      errorCode: ErrorCode.UnknownError,
+      message: exception instanceof Error ? exception.message : getErrorMessage(ErrorCode.UnknownError),
+    };
   }
 }

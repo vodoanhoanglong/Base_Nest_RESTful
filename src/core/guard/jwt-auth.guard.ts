@@ -5,11 +5,11 @@ import { getErrorMessage } from "@shared/constant/error-message.constant";
 import { DecoratorKey } from "@shared/enum/decorator.enum";
 import { ErrorCode } from "@shared/enum/error-code.enum";
 import { Role } from "@shared/enum/role.enum";
-import { StrategyKey } from "@shared/enum/strategy.enum";
+import { TokenStrategyKey } from "@shared/enum/token.enum";
 import { IRequest } from "@shared/interface/request.interface";
 
 @Injectable()
-export class JwtAuthGuard extends AuthGuard(StrategyKey.JWT) {
+export class JwtAuthGuard extends AuthGuard(TokenStrategyKey.Jwt) {
   constructor(private reflector: Reflector) {
     super();
   }

@@ -1,3 +1,4 @@
+import { setupSwagger } from "@core/config/doc.config";
 import { ENVIRONMENT } from "@core/config/env.config";
 import { UnhandledExceptionFilter } from "@core/exception/exception.filter";
 import { JwtAuthGuard } from "@core/guard/jwt-auth.guard";
@@ -6,6 +7,8 @@ import { CustomValidationPipe } from "@core/pipe/validation.pipe";
 import { MikroORM } from "@mikro-orm/core";
 import { VersioningType } from "@nestjs/common";
 import { NestFactory, Reflector } from "@nestjs/core";
+import { getMessage } from "@shared/constant/message.constant";
+import { MessageCode } from "@shared/enum/message-code.enum";
 import { WinstonLogger } from "@shared/service/logger/winston.logger";
 import * as bodyParser from "body-parser";
 import * as compression from "compression";
@@ -58,10 +61,11 @@ async function bootstrap() {
 
     if (ENVIRONMENT.DB_AUTO_SYNC) await app.get(MikroORM).getSchemaGenerator().updateSchema();
 
+    setupSwagger(app);
     await app.listen(ENVIRONMENT.PORT);
-    WinstonLogger.info(`✅ Server ready at http://localhost:${ENVIRONMENT.PORT}`);
+    WinstonLogger.info(getMessage(MessageCode.ServerStarted, ENVIRONMENT.PORT));
   } catch (error) {
-    WinstonLogger.error(`❌ Error while starting server, ${error}`);
+    WinstonLogger.error(getMessage(MessageCode.ServerStartFailed, error));
     process.exit();
   }
 }

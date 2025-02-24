@@ -1,26 +1,23 @@
-import { ENVIRONMENT } from "@core/config/env.config";
 import { Account } from "@database/entity/account.entity";
+import { VerificationLog } from "@database/entity/verification-code.entity";
 import { AuthController } from "@domain/auth/auth.controller";
 import { AuthService } from "@domain/auth/auth.service";
 import { MikroOrmModule } from "@mikro-orm/nestjs";
 import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
-import { StrategyKey } from "@shared/enum/strategy.enum";
-import { JwtStrategy } from "@shared/service/jwt/jwt.strategy";
-import { RedisModule } from "@shared/service/redis/redis.module";
+import { TokenStrategyKey } from "@shared/enum/token.enum";
+import { OtpModule } from "@shared/service/otp/otp.module";
+import { JwtStrategy } from "@shared/service/token/jwt.strategy";
+import { TokenModule } from "@shared/service/token/token.module";
 
 @Module({
   imports: [
-    PassportModule.register({ defaultStrategy: StrategyKey.JWT }),
-    JwtModule.registerAsync({
-      useFactory: async () => ({
-        secret: ENVIRONMENT.JWT_SECRET,
-        signOptions: { expiresIn: ENVIRONMENT.JWT_EXPIRED },
-      }),
-    }),
-    MikroOrmModule.forFeature([Account]),
-    RedisModule,
+    JwtModule.register({}),
+    PassportModule.register({ defaultStrategy: TokenStrategyKey.Jwt }),
+    MikroOrmModule.forFeature([Account, VerificationLog]),
+    OtpModule,
+    TokenModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

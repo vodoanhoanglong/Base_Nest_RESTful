@@ -1,8 +1,17 @@
+import { ErrorCode } from "@shared/enum/error-code.enum";
+
 export interface IException {
-  message: string;
   statusCode: number;
+  errorCode: ErrorCode;
+  message: string;
   method: string;
   path: string;
   timestamp: string;
   exception: unknown;
+}
+
+export interface IExceptionDetail {
+  statusCode: number;
+  errorCode: ErrorCode;
+  message: string;
 }
