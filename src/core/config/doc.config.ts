@@ -14,7 +14,7 @@ export function setupSwagger(app: INestApplication) {
   const document = SwaggerModule.createDocument(app, config);
 
   const theme = new SwaggerTheme();
-  const darkTheme = theme.getDefaultConfig(SwaggerThemeNameEnum.DRACULA);
+  const darkTheme = theme.getDefaultConfig(SwaggerThemeNameEnum.CLASSIC);
 
   SwaggerModule.setup("docs", app, document, {
     customCss: darkTheme.customCss,

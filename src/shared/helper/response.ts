@@ -1,11 +1,21 @@
 import { HttpStatus } from "@nestjs/common";
+import { ApiProperty } from "@nestjs/swagger";
 import { ErrorCode } from "@shared/enum/error-code.enum";
 
 export class BaseResponse<T> {
+  @ApiProperty({ enum: HttpStatus, example: HttpStatus.OK })
   statusCode: number;
+
+  @ApiProperty({ example: "OK" })
   message: string;
+
+  @ApiProperty({ required: false })
   data: T | null;
+
+  @ApiProperty({ required: false })
   error?: unknown;
+
+  @ApiProperty({ required: false, enum: ErrorCode })
   errorCode?: ErrorCode;
 
   private constructor(statusCode: number, message: string, data: T | null, error?: unknown, errorCode?: ErrorCode) {
