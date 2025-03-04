@@ -1,12 +1,13 @@
-import { ExecutionContext, ForbiddenException, Injectable } from "@nestjs/common";
+import { CustomHttpException } from "@core/exception/custom-http-exception";
+import { ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";
-import { getErrorMessage } from "@shared/constant/error-message.constant";
 import { DecoratorKey } from "@shared/enum/decorator.enum";
 import { ErrorCode } from "@shared/enum/error-code.enum";
 import { Role } from "@shared/enum/role.enum";
 import { TokenStrategyKey } from "@shared/enum/token.enum";
 import { IRequest } from "@shared/interface/request.interface";
+import { JsonWebTokenError, TokenExpiredError } from "jsonwebtoken";
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard(TokenStrategyKey.Jwt) {
@@ -35,10 +36,18 @@ export class JwtAuthGuard extends AuthGuard(TokenStrategyKey.Jwt) {
     const request = context.switchToHttp().getRequest<IRequest>();
     const user = request.user;
 
-    if (!user) throw new ForbiddenException(getErrorMessage(ErrorCode.Unauthenticated));
-
     if (requiredRoles.includes(user.role)) return true;
 
-    throw new ForbiddenException(getErrorMessage(ErrorCode.Unauthorized, user.role));
+    throw new UnauthorizedException(new CustomHttpException(ErrorCode.Unauthorized, user.role));
+  }
+
+  handleRequest(err, user, info, context: ExecutionContext) {
+    if (info instanceof TokenExpiredError) throw new UnauthorizedException(ErrorCode.TokenExpired);
+
+    if (info instanceof JsonWebTokenError) throw new UnauthorizedException(ErrorCode.InvalidToken);
+
+    if (err || !user) throw new UnauthorizedException(ErrorCode.Unauthenticated);
+
+    return user;
   }
 }

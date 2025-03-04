@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
-import { VerificationType } from "@shared/enum/verification.enum";
+import { VerificationBehavior, VerificationType } from "@shared/enum/verification.enum";
 import { IsEmail, IsEnum, IsNotEmpty, IsString, ValidateIf } from "class-validator";
 
 export class ConfirmVerificationRequest {
@@ -19,6 +19,15 @@ export class ConfirmVerificationRequest {
   @IsNotEmpty()
   @ApiProperty({ description: "Your verification code", example: "0303" })
   code: string;
+
+  @IsNotEmpty()
+  @IsEnum(VerificationBehavior)
+  @ApiProperty({
+    enum: VerificationBehavior,
+    description: "Verification behavior",
+    example: VerificationBehavior.FindEmail,
+  })
+  verificationBehavior: VerificationBehavior;
 
   @IsNotEmpty()
   @IsEnum(VerificationType)

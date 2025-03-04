@@ -13,7 +13,6 @@ import { IJwtDecoded, IJwtPayload } from "@shared/interface/jwt-payload.interfac
 import { RedisService } from "@shared/service/redis/redis.service";
 import { Request } from "express";
 import { ExtractJwt, Strategy } from "passport-jwt";
-
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, TokenStrategyKey.Jwt) {
   constructor(

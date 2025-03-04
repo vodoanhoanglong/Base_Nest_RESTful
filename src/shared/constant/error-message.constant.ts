@@ -9,6 +9,9 @@ const ErrorMessage: Record<ErrorCode, string | ((...param: unknown[]) => string)
   [ErrorCode.Unauthenticated]: "User not authenticated",
   [ErrorCode.ExistedEmail]: "Email already existed in system",
   [ErrorCode.InvalidEmailOrPassword]: "Email or password is invalid",
+  [ErrorCode.TokenExpired]: "Token expired",
+
+  [ErrorCode.AccountNotFound]: (identify: string) => `Account ${identify} not found in system`,
 
   [ErrorCode.InvalidToken]: "Invalid token",
   [ErrorCode.InvalidTokenSecret]: "Invalid token secret",

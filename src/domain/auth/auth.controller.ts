@@ -2,10 +2,12 @@ import { ApiExtraModelsCustom, ApiResponseCustom } from "@core/decorator/doc.dec
 import { AuthService } from "@domain/auth/auth.service";
 import { ConfirmVerificationRequest } from "@domain/auth/request/ConfirmVerification.request";
 import { RefreshTokenRequest } from "@domain/auth/request/RefreshToken.request";
+import { ResetPasswordRequest } from "@domain/auth/request/ResetPassword.request";
 import { SendVerificationRequest } from "@domain/auth/request/SendVerification.request";
 import { SignInRequest } from "@domain/auth/request/SignIn.request";
 import { SignUpRequest } from "@domain/auth/request/SignUp.request";
 import response from "@domain/auth/response";
+import { ConfirmVerificationResponse } from "@domain/auth/response/ConfirmVerification.response";
 import { SignInResponse } from "@domain/auth/response/SignIn.response";
 import { VerificationCodeResponse } from "@domain/auth/response/VerificationCode.response";
 import { Body, Controller, Post } from "@nestjs/common";
@@ -37,7 +39,7 @@ export class AuthController {
   }
 
   @Post("confirm-verification")
-  @ApiResponseCustom()
+  @ApiResponseCustom(ConfirmVerificationResponse)
   confirmVerification(@Body() request: ConfirmVerificationRequest) {
     return this.authService.confirmVerification(request);
   }
@@ -46,5 +48,11 @@ export class AuthController {
   @ApiResponseCustom(SignInResponse)
   refreshNewToken(@Body() request: RefreshTokenRequest) {
     return this.authService.refreshNewToken(request);
+  }
+
+  @Post("reset-password")
+  @ApiResponseCustom()
+  resetPassword(@Body() request: ResetPasswordRequest) {
+    return this.authService.resetPassword(request);
   }
 }

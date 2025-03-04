@@ -8,7 +8,7 @@ import { NodeEnv } from "@shared/enum/environment.enum";
 import { ErrorCode } from "@shared/enum/error-code.enum";
 import { RedisKey } from "@shared/enum/redis-key.enum";
 import { SmsCode } from "@shared/enum/sms-code.enum";
-import { VerificationType } from "@shared/enum/verification.enum";
+import { VerificationBehavior, VerificationType } from "@shared/enum/verification.enum";
 import { CustomError } from "@shared/helper/error";
 import { randomNumber } from "@shared/helper/random";
 import { RedisService } from "@shared/service/redis/redis.service";
@@ -35,9 +35,13 @@ export class OtpService {
       : randomNumber(this.OTP_LENGTH);
   }
 
-  async sendOtp(phoneNumber: string) {
+  private getOtpKey(phoneNumber: string, behavior: VerificationBehavior) {
+    return `${RedisKey.Otp}${behavior}_${phoneNumber}`;
+  }
+
+  async sendOtp(phoneNumber: string, behavior: VerificationBehavior) {
     let currentLimit = 0;
-    const otpKey = `${RedisKey.Otp}${phoneNumber}`;
+    const otpKey = this.getOtpKey(phoneNumber, behavior);
     const otpLimitKey = `${RedisKey.OtpLimit}${phoneNumber}`;
     try {
       const [lastSent, lastLimit] = await Promise.all([
@@ -62,6 +66,7 @@ export class OtpService {
         code: otp,
         expireAt,
         phoneNumber,
+        verificationBehavior: behavior,
         verificationType: VerificationType.Otp,
       } as VerificationLog);
 
@@ -82,9 +87,9 @@ export class OtpService {
     }
   }
 
-  async confirmOtp(phoneNumber: string, inputOtp: string) {
+  async confirmOtp(phoneNumber: string, inputOtp: string, behavior: VerificationBehavior) {
     try {
-      const otpKey = `${RedisKey.Otp}${phoneNumber}`;
+      const otpKey = this.getOtpKey(phoneNumber, behavior);
 
       const otp = await this.redis.get(otpKey);
 
@@ -92,7 +97,7 @@ export class OtpService {
       if (otp !== inputOtp) throw new CustomError(ErrorCode.OtpIncorrect);
 
       await this.verificationLogRepository.nativeUpdate(
-        { phoneNumber, isActive: true },
+        { phoneNumber, verificationBehavior: behavior, isActive: true },
         { isActive: false, confirmedAt: moment().unix() },
       );
     } catch (error) {

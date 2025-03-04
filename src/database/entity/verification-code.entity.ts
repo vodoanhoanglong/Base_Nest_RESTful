@@ -1,7 +1,7 @@
 import { Account } from "@database/entity/account.entity";
 import { BaseEntity } from "@database/entity/base-entity";
 import { Entity, Enum, ManyToOne, Property } from "@mikro-orm/core";
-import { VerificationType } from "@shared/enum/verification.enum";
+import { VerificationBehavior, VerificationType } from "@shared/enum/verification.enum";
 
 @Entity({ tableName: "verification_logs" })
 export class VerificationLog extends BaseEntity {
@@ -22,6 +22,9 @@ export class VerificationLog extends BaseEntity {
 
   @Property({ nullable: true })
   phoneNumber?: string;
+
+  @Enum({ items: () => VerificationBehavior, default: VerificationBehavior.RegisterAccount })
+  verificationBehavior: VerificationBehavior;
 
   @ManyToOne({ nullable: true })
   account?: Account;

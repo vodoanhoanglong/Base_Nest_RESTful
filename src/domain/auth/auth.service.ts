@@ -3,9 +3,11 @@ import { Account } from "@database/entity/account.entity";
 import { VerificationLog } from "@database/entity/verification-code.entity";
 import { ConfirmVerificationRequest } from "@domain/auth/request/ConfirmVerification.request";
 import { RefreshTokenRequest } from "@domain/auth/request/RefreshToken.request";
+import { ResetPasswordRequest } from "@domain/auth/request/ResetPassword.request";
 import { SendVerificationRequest } from "@domain/auth/request/SendVerification.request";
 import { SignInRequest } from "@domain/auth/request/SignIn.request";
 import { SignUpRequest } from "@domain/auth/request/SignUp.request";
+import { ConfirmVerificationResponse } from "@domain/auth/response/ConfirmVerification.response";
 import { SignInResponse } from "@domain/auth/response/SignIn.response";
 import { VerificationCodeResponse } from "@domain/auth/response/VerificationCode.response";
 import { InjectRepository } from "@mikro-orm/nestjs";
@@ -15,7 +17,7 @@ import { JwtService } from "@nestjs/jwt";
 import { ErrorCode } from "@shared/enum/error-code.enum";
 import { RedisKey } from "@shared/enum/redis-key.enum";
 import { TokenIssuer } from "@shared/enum/token.enum";
-import { VerificationType } from "@shared/enum/verification.enum";
+import { VerificationBehavior, VerificationType } from "@shared/enum/verification.enum";
 import { CustomError } from "@shared/helper/error";
 import { hashPassword, verifyPassword } from "@shared/helper/hash";
 import { BaseResponse } from "@shared/helper/response";
@@ -36,12 +38,10 @@ export class AuthService {
     @InjectRepository(VerificationLog) private readonly verificationLogRepository: EntityRepository<VerificationLog>,
   ) {}
 
-  private async validateSignUp(request: SignUpRequest) {
+  private async validatePrevVerification(phoneNumber: string, behavior: VerificationBehavior) {
     try {
-      const { phoneNumber } = request;
-
       const prevVerification = await this.verificationLogRepository.findOne(
-        { phoneNumber, isActive: false },
+        { phoneNumber, verificationBehavior: behavior, isActive: false },
         { orderBy: { createdAt: "DESC" } },
       );
 
@@ -50,9 +50,39 @@ export class AuthService {
         moment().isAfter(moment.unix(prevVerification.confirmedAt).add({ seconds: ENVIRONMENT.VERIFICATION_SESSION }))
       )
         throw new CustomError(ErrorCode.VerificationSessionExpired);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async validateResetPassword(request: ResetPasswordRequest) {
+    try {
+      const { phoneNumber } = request;
+
+      await this.validatePrevVerification(phoneNumber, VerificationBehavior.ResetPassword);
 
       const accountExisted = await this.accountRepository.findOne(
-        { email: request.email, isActive: true },
+        {
+          phoneNumber,
+          isActive: true,
+        },
+        { fields: ["id"] as Array<keyof Account> },
+      );
+
+      if (!accountExisted) throw new CustomError(ErrorCode.AccountNotFound, phoneNumber);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async validateSignUp(request: SignUpRequest) {
+    try {
+      const { phoneNumber, email } = request;
+
+      await this.validatePrevVerification(phoneNumber, VerificationBehavior.RegisterAccount);
+
+      const accountExisted = await this.accountRepository.findOne(
+        { email, isActive: true },
         { fields: ["id"] as Array<keyof Account> },
       );
 
@@ -97,7 +127,7 @@ export class AuthService {
     try {
       switch (request.verificationType) {
         case VerificationType.Otp:
-          const expireAt = await this.otpService.sendOtp(request.phoneNumber!);
+          const expireAt = await this.otpService.sendOtp(request.phoneNumber!, request.verificationBehavior);
           return BaseResponse.of(VerificationCodeResponse.transformOtpData(expireAt));
         case VerificationType.Email:
           return BaseResponse.ok();
@@ -113,7 +143,13 @@ export class AuthService {
     try {
       switch (request.verificationType) {
         case VerificationType.Otp:
-          await this.otpService.confirmOtp(request.phoneNumber!, request.code);
+          await this.otpService.confirmOtp(request.phoneNumber!, request.code, request.verificationBehavior);
+
+          if (request.verificationBehavior === VerificationBehavior.FindEmail) {
+            const account = await this.accountRepository.findOne({ phoneNumber: request.phoneNumber });
+            return account ? BaseResponse.of(ConfirmVerificationResponse.fromEntity(account)) : BaseResponse.ok();
+          }
+
           return BaseResponse.ok();
         case VerificationType.Email:
           return BaseResponse.ok();
@@ -150,6 +186,19 @@ export class AuthService {
       await this.redisService.set(`${RedisKey.Account}${account.id}`, account, ENVIRONMENT.JWT_EXPIRED);
 
       return BaseResponse.of(SignInResponse.fromEntity(account, newAccessToken, newRefreshToken));
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async resetPassword(request: ResetPasswordRequest) {
+    try {
+      const { phoneNumber, password } = request;
+      await this.validateResetPassword(request);
+      const hashedPassword = await hashPassword(password);
+
+      await this.accountRepository.nativeUpdate({ phoneNumber }, { password: hashedPassword });
+      return BaseResponse.ok();
     } catch (error) {
       throw error;
     }

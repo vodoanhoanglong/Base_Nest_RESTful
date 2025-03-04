@@ -1,7 +1,8 @@
+import { CustomHttpException } from "@core/exception/custom-http-exception";
 import { DriverException } from "@mikro-orm/core";
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from "@nestjs/common";
 import { getErrorMessage } from "@shared/constant/error-message.constant";
-import { ErrorCode } from "@shared/enum/error-code.enum";
+import { ErrorCode, isErrorCode } from "@shared/enum/error-code.enum";
 import { CustomError } from "@shared/helper/error";
 import { BaseResponse } from "@shared/helper/response";
 import { IException, IExceptionDetail } from "@shared/interface/exception.interface";
@@ -37,6 +38,12 @@ export class UnhandledExceptionFilter implements ExceptionFilter {
       );
   }
 
+  private serializeHttpError(statusCode: number, message: string): IExceptionDetail {
+    return isErrorCode(message)
+      ? { statusCode, errorCode: message, message: getErrorMessage(message) }
+      : { statusCode, errorCode: ErrorCode.HttpError, message };
+  }
+
   private getExceptionDetail(exception: unknown): IExceptionDetail {
     if (exception instanceof CustomError)
       return { statusCode: HttpStatus.BAD_REQUEST, errorCode: exception.errorCode, message: exception.message };
@@ -51,15 +58,18 @@ export class UnhandledExceptionFilter implements ExceptionFilter {
     if (exception instanceof HttpException) {
       const response = exception.getResponse();
 
-      if (typeof response === "string")
-        return { statusCode: exception.getStatus(), errorCode: ErrorCode.HttpError, message: response };
+      if (typeof response === "string") return this.serializeHttpError(exception.getStatus(), response);
 
-      if (typeof response === "object" && "message" in response)
-        return {
-          statusCode: exception.getStatus(),
-          errorCode: ErrorCode.HttpError,
-          message: response.message as string,
-        };
+      if (typeof response === "object") {
+        if ("message" in response) return this.serializeHttpError(exception.getStatus(), response.message as string);
+
+        if (response instanceof CustomHttpException)
+          return {
+            statusCode: exception.getStatus(),
+            errorCode: response.errorCode,
+            message: getErrorMessage(response.errorCode, response.params),
+          };
+      }
     }
 
     return {

@@ -1,1 +1,1 @@
-CREATE DATABASE aroma;
+CREATE DATABASE postgres;

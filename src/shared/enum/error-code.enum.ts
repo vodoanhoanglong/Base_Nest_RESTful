@@ -2,8 +2,12 @@ export enum ErrorCode {
   ValidationFailed = "validation_failed",
   Unauthenticated = "unauthenticated",
   Unauthorized = "unauthorized",
+  TokenExpired = "token_expired",
   ExistedEmail = "existed_email",
   InvalidEmailOrPassword = "invalid_email_or_password",
+
+  // Account
+  AccountNotFound = "account_not_found",
 
   // Token
   InvalidToken = "invalid_token",
@@ -28,3 +32,6 @@ export enum ErrorCode {
   HttpError = "http_error",
   UnknownError = "unknown_error",
 }
+
+const ErrorCodeSet = new Set(Object.values(ErrorCode));
+export const isErrorCode = (value: string): value is ErrorCode => ErrorCodeSet.has(value as ErrorCode);

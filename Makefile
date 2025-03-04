@@ -3,7 +3,7 @@ args=$(filter-out $@,$(MAKECMDGOALS))
 .EXPORT_ALL_VARIABLES:
 
 ENV_FILE ?= .env
-PROJECT=aroma
+PROJECT=sample
 
 # export .env file
 -include $(ENV_FILE)
