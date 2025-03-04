@@ -1,4 +1,4 @@
-import { CustomHttpException } from "@core/exception/custom-http-exception";
+import { CustomHttpException } from "@core/exception/custom-http.exception";
 import { ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import { AuthGuard } from "@nestjs/passport";

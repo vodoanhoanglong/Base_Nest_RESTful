@@ -1,4 +1,4 @@
-import { CustomHttpException } from "@core/exception/custom-http-exception";
+import { CustomHttpException } from "@core/exception/custom-http.exception";
 import { DriverException } from "@mikro-orm/core";
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from "@nestjs/common";
 import { getErrorMessage } from "@shared/constant/error-message.constant";
