@@ -1,7 +1,7 @@
 import { SmsCode } from "@shared/enum/sms-code.enum";
 
 const SmsMessage: Record<SmsCode, string | ((param: string | number) => string)> = {
-  [SmsCode.Otp]: (otp: string) => `NestJS, your register code is ${otp}`,
+  [SmsCode.Otp]: (otp: string) => `Base Nestjs, your register code is ${otp}`,
 } as const;
 
 export function getSmsMessage(code: SmsCode, param?: string | number): string {

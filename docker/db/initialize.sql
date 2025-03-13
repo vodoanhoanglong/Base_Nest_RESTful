@@ -1,1 +1,1 @@
-CREATE DATABASE postgres;
+CREATE DATABASE base_nest;

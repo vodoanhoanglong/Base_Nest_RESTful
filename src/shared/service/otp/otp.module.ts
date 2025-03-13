@@ -2,10 +2,10 @@ import { VerificationLog } from "@database/entity/verification-code.entity";
 import { MikroOrmModule } from "@mikro-orm/nestjs";
 import { Module } from "@nestjs/common";
 import { OtpService } from "@shared/service/otp/otp.service";
-import { SmsModule } from "@shared/service/sms/sms.module";
+import { QueueVerificationModule } from "@shared/service/queue/verification/verification.module";
 
 @Module({
-  imports: [SmsModule, MikroOrmModule.forFeature([VerificationLog])],
+  imports: [QueueVerificationModule, MikroOrmModule.forFeature([VerificationLog])],
   providers: [OtpService],
   exports: [OtpService],
 })

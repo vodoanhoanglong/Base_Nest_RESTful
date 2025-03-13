@@ -11,8 +11,8 @@ import { SmsCode } from "@shared/enum/sms-code.enum";
 import { VerificationBehavior, VerificationType } from "@shared/enum/verification.enum";
 import { CustomError } from "@shared/helper/error";
 import { randomNumber } from "@shared/helper/random";
+import { VerificationProducer } from "@shared/service/queue/verification/verification.producer";
 import { RedisService } from "@shared/service/redis/redis.service";
-import { CoolSmsService } from "@shared/service/sms/cool-sms.service";
 import * as moment from "moment";
 
 @Injectable()
@@ -25,7 +25,7 @@ export class OtpService {
 
   constructor(
     private readonly redis: RedisService,
-    private readonly sms: CoolSmsService,
+    private readonly producer: VerificationProducer,
     @InjectRepository(VerificationLog) private readonly verificationLogRepository: EntityRepository<VerificationLog>,
   ) {}
 
@@ -70,7 +70,7 @@ export class OtpService {
         verificationType: VerificationType.Otp,
       } as VerificationLog);
 
-      await this.sms.sendSms({ to: phoneNumber, message: getSmsMessage(SmsCode.Otp, phoneNumber) });
+      await this.producer.sendSmsProducer({ to: phoneNumber, message: getSmsMessage(SmsCode.Otp, phoneNumber) });
 
       return expireAt;
     } catch (error) {

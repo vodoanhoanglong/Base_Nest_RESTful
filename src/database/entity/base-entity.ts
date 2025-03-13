@@ -1,5 +1,5 @@
 import { Account } from "@database/entity/account.entity";
-import { ManyToOne, PrimaryKey, Property } from "@mikro-orm/core";
+import { ManyToOne, PrimaryKey, Property, raw } from "@mikro-orm/core";
 
 export abstract class BaseEntity {
   @PrimaryKey({ type: "bigint" })
@@ -11,7 +11,7 @@ export abstract class BaseEntity {
   @Property({ defaultRaw: "EXTRACT(EPOCH FROM NOW())" })
   createdAt: number;
 
-  @Property({ onUpdate: () => "EXTRACT(EPOCH FROM NOW())", nullable: true })
+  @Property({ onUpdate: () => raw("EXTRACT(EPOCH FROM NOW())"), nullable: true })
   updatedAt?: number;
 
   @ManyToOne({ entity: () => Account, fieldName: "created_by", nullable: true })

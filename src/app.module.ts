@@ -4,6 +4,7 @@ import { AuthModule } from "@domain/auth/auth.module";
 import { MikroOrmModule } from "@mikro-orm/nestjs";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
+import { QueueModule } from "@shared/service/queue/queue.module";
 import { RedisModule } from "@shared/service/redis/redis.module";
 import { AppController } from "src/app.controller";
 import { AppService } from "src/app.service";
@@ -14,6 +15,7 @@ import { initOrmConfig } from "src/core/config/orm.config";
     ConfigModule.forRoot(initEnvironmentConfig()),
     MikroOrmModule.forRoot(initOrmConfig()),
     RedisModule,
+    QueueModule,
     AuthModule,
     UserModule,
   ],

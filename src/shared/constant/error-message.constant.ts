@@ -28,6 +28,16 @@ const ErrorMessage: Record<ErrorCode, string | ((...param: unknown[]) => string)
   [ErrorCode.VerificationNotFound]: "Please verification code earlier",
   [ErrorCode.VerificationSessionExpired]: "Your verification session is expired, please verify again",
 
+  [ErrorCode.UserNotFound]: "User not found",
+
+  [ErrorCode.NotAnyRecipient]: "Not found any recipients",
+  [ErrorCode.SendMailFailed]: (errorMessage: string) => `Error while sending mail: ${errorMessage}`,
+
+  [ErrorCode.ConsumerNotFound]: (jobName: string) => `Consumer not found for job: ${jobName}`,
+  [ErrorCode.ConsumerFailed]: (jobId: string, jobName: string) => `Failed to process job ${jobId} of type ${jobName}`,
+  [ErrorCode.ProcessFailed]: (jobId: string, jobName: string, msg: string) =>
+    `Failed job [${jobName}] id: ${jobId} with error: ${msg}`,
+
   [ErrorCode.HttpError]: "Http request error",
   [ErrorCode.UnknownError]: "Unknown error",
 } as const;

@@ -8,6 +8,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 import { TokenStrategyKey } from "@shared/enum/token.enum";
 import { OtpModule } from "@shared/service/otp/otp.module";
+import { QueueVerificationModule } from "@shared/service/queue/verification/verification.module";
 import { JwtStrategy } from "@shared/service/token/jwt.strategy";
 import { TokenModule } from "@shared/service/token/token.module";
 
@@ -18,6 +19,7 @@ import { TokenModule } from "@shared/service/token/token.module";
     MikroOrmModule.forFeature([Account, VerificationLog]),
     OtpModule,
     TokenModule,
+    QueueVerificationModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],

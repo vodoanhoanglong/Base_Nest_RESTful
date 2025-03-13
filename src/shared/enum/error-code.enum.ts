@@ -17,6 +17,10 @@ export enum ErrorCode {
 
   // Database
   DatabaseError = "database_error",
+
+  // User
+  UserNotFound = "user_not_found",
+
   MissingMigrationFilename = "missing_migration_filename",
 
   // Auth verification
@@ -28,6 +32,15 @@ export enum ErrorCode {
   OtpIncorrect = "otp_incorrect",
   VerificationNotFound = "verification_not_found",
   VerificationSessionExpired = "verification_session_expired",
+
+  // Mail
+  NotAnyRecipient = "not_any_recipient",
+  SendMailFailed = "send_mail_failed",
+
+  // Queue
+  ConsumerNotFound = "consumer_not_found",
+  ProcessFailed = "process_failed",
+  ConsumerFailed = "consumer_failed",
 
   HttpError = "http_error",
   UnknownError = "unknown_error",

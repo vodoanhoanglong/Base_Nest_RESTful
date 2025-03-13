@@ -2,12 +2,14 @@ import { ENVIRONMENT } from "@core/config/env.config";
 import { Account } from "@database/entity/account.entity";
 import { VerificationLog } from "@database/entity/verification-code.entity";
 import { ConfirmVerificationRequest } from "@domain/auth/request/ConfirmVerification.request";
+import { PortalSignInRequest } from "@domain/auth/request/PortalSignIn.request";
 import { RefreshTokenRequest } from "@domain/auth/request/RefreshToken.request";
 import { ResetPasswordRequest } from "@domain/auth/request/ResetPassword.request";
 import { SendVerificationRequest } from "@domain/auth/request/SendVerification.request";
 import { SignInRequest } from "@domain/auth/request/SignIn.request";
 import { SignUpRequest } from "@domain/auth/request/SignUp.request";
 import { ConfirmVerificationResponse } from "@domain/auth/response/ConfirmVerification.response";
+import { PortalSignInResponse } from "@domain/auth/response/PortalSignIn.response";
 import { SignInResponse } from "@domain/auth/response/SignIn.response";
 import { VerificationCodeResponse } from "@domain/auth/response/VerificationCode.response";
 import { InjectRepository } from "@mikro-orm/nestjs";
@@ -15,7 +17,9 @@ import { EntityRepository } from "@mikro-orm/postgresql";
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ErrorCode } from "@shared/enum/error-code.enum";
+import { MailTemplate } from "@shared/enum/mail-template.enum";
 import { RedisKey } from "@shared/enum/redis-key.enum";
+import { Role } from "@shared/enum/role.enum";
 import { TokenIssuer } from "@shared/enum/token.enum";
 import { VerificationBehavior, VerificationType } from "@shared/enum/verification.enum";
 import { CustomError } from "@shared/helper/error";
@@ -23,6 +27,7 @@ import { hashPassword, verifyPassword } from "@shared/helper/hash";
 import { BaseResponse } from "@shared/helper/response";
 import { IJwtDecoded } from "@shared/interface/jwt-payload.interface";
 import { OtpService } from "@shared/service/otp/otp.service";
+import { VerificationProducer } from "@shared/service/queue/verification/verification.producer";
 import { RedisService } from "@shared/service/redis/redis.service";
 import { TokenService } from "@shared/service/token/token.service";
 import * as moment from "moment";
@@ -34,6 +39,7 @@ export class AuthService {
     private readonly redisService: RedisService,
     private readonly otpService: OtpService,
     private readonly tokenService: TokenService,
+    private readonly producer: VerificationProducer,
     @InjectRepository(Account) private readonly accountRepository: EntityRepository<Account>,
     @InjectRepository(VerificationLog) private readonly verificationLogRepository: EntityRepository<VerificationLog>,
   ) {}
@@ -97,18 +103,46 @@ export class AuthService {
       const account = await this.accountRepository.findOne({ email: request.email, isActive: true });
       if (!account) throw new CustomError(ErrorCode.InvalidEmailOrPassword);
 
-      const isMatch = await verifyPassword(request.password, account.password);
-      if (!isMatch) throw new CustomError(ErrorCode.InvalidEmailOrPassword);
+      await this.validatePassword(account, request.password);
 
-      const accessToken = this.tokenService.generateAccessToken(account);
-      const refreshToken = this.tokenService.generateRefreshToken(account, accessToken, ENVIRONMENT.JWT_SECRET);
-
-      await this.redisService.set(`${RedisKey.Account}${account.id}`, account, ENVIRONMENT.JWT_EXPIRED);
+      const [accessToken, refreshToken] = await this.generateTokens(account);
 
       return BaseResponse.of(SignInResponse.fromEntity(account, accessToken, refreshToken));
     } catch (error) {
       throw error;
     }
+  }
+
+  async portalSignIn(request: PortalSignInRequest) {
+    try {
+      const account = await this.accountRepository.findOne(
+        { email: request.email, role: { $in: [Role.Admin, Role.Moderator] }, isActive: true },
+        { populate: ["accountPermissions.permission"] },
+      );
+      if (!account) throw new CustomError(ErrorCode.InvalidEmailOrPassword);
+
+      await this.validatePassword(account, request.password);
+
+      const [accessToken, refreshToken] = await this.generateTokens(account);
+
+      return BaseResponse.of(PortalSignInResponse.fromEntity(account, accessToken, refreshToken));
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  private async validatePassword(account: Account, password: string) {
+    const isMatch = await verifyPassword(password, account.password);
+    if (!isMatch) throw new CustomError(ErrorCode.InvalidEmailOrPassword);
+  }
+
+  private async generateTokens(account: Account) {
+    const accessToken = this.tokenService.generateAccessToken(account);
+    const refreshToken = this.tokenService.generateRefreshToken(account, accessToken, ENVIRONMENT.JWT_SECRET);
+
+    await this.redisService.set(`${RedisKey.Account}${account.id}`, account, ENVIRONMENT.JWT_EXPIRED);
+
+    return [accessToken, refreshToken];
   }
 
   async signUp(request: SignUpRequest) {
@@ -180,10 +214,7 @@ export class AuthService {
       const account = await this.accountRepository.findOne({ id: refreshTokenPayload.sub, isActive: true });
       if (!account) throw new CustomError(ErrorCode.Unauthenticated);
 
-      const newAccessToken = this.tokenService.generateAccessToken(account);
-      const newRefreshToken = this.tokenService.generateRefreshToken(account, newAccessToken, ENVIRONMENT.JWT_SECRET);
-
-      await this.redisService.set(`${RedisKey.Account}${account.id}`, account, ENVIRONMENT.JWT_EXPIRED);
+      const [newAccessToken, newRefreshToken] = await this.generateTokens(account);
 
       return BaseResponse.of(SignInResponse.fromEntity(account, newAccessToken, newRefreshToken));
     } catch (error) {
@@ -202,5 +233,15 @@ export class AuthService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async testSendMail(email: string) {
+    await this.producer.sendMailProducer({
+      to: email,
+      template: MailTemplate.OtpAuth,
+      context: { otp: 1234, expiration: 5, year: new Date().getFullYear() },
+    });
+
+    return BaseResponse.ok();
   }
 }

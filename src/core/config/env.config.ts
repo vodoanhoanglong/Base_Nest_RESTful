@@ -133,6 +133,27 @@ class EnvironmentVariable {
   @IsNumber()
   @IsNotEmpty()
   VERIFICATION_SESSION: number;
+
+  @Transform(({ value }) => Number(value))
+  @IsNumber()
+  @IsNotEmpty()
+  MAIL_PORT: number;
+
+  @IsString()
+  @IsNotEmpty()
+  MAIL_HOST: string;
+
+  @IsString()
+  @IsNotEmpty()
+  MAIL_USER: string;
+
+  @IsString()
+  @IsNotEmpty()
+  MAIL_PASSWORD: string;
+
+  @IsString()
+  @IsNotEmpty()
+  MAIL_FROM: string;
 }
 
 export const ENVIRONMENT = {} as EnvironmentVariable;

@@ -25,7 +25,7 @@ export const redisRetryStrategy = (times: number, totalRetryDuration: number): R
     };
   }
 
-  WinstonLogger.info(getMessage(MessageCode.RedisRetrying), times, delay);
+  WinstonLogger.info(getMessage(MessageCode.RedisRetrying, times, delay));
   return {
     delay,
     retryDuration: currentRetryDuration,

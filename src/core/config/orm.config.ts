@@ -33,5 +33,14 @@ export const initOrmConfig = () =>
       : {
           debug: false,
           metadataProvider: ReflectMetadataProvider,
+          driverOptions: {
+            connection: {
+              ssl: {
+                rejectUnauthorized: false,
+              },
+            },
+          },
         }),
   });
+
+export default initOrmConfig;

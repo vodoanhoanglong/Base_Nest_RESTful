@@ -12,6 +12,12 @@ const Message: Record<MessageCode, string | ((...param: unknown[]) => string)> =
   [MessageCode.RedisRetrying]: (times: number, delay: number) =>
     `${redisColorized} Connection retry, attempt ${times}, waiting for ${delay}ms`,
   [MessageCode.RedisMaxRetryAttempt]: `${redisColorized} Stopping reconnection attempts. Max retry duration reached`,
+
+  [MessageCode.JobProcessing]: (jobId: string, jobName: string) => `Processing job [${jobName}] id: ${jobId}`,
+  [MessageCode.JobCompleted]: (jobId: string, jobName: string) => `Complete job [${jobName}] id: ${jobId}`,
+
+  [MessageCode.SendMailSuccessfully]: (payload: string) =>
+    `Email sent successfully to recipients with the following parameters: ${payload}`,
 } as const;
 
 export function getMessage(code: MessageCode, ...param: unknown[]): string {

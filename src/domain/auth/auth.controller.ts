@@ -1,6 +1,8 @@
 import { ApiExtraModelsCustom, ApiResponseCustom } from "@core/decorator/doc.decorator";
+import { Roles } from "@core/decorator/role.decorator";
 import { AuthService } from "@domain/auth/auth.service";
 import { ConfirmVerificationRequest } from "@domain/auth/request/ConfirmVerification.request";
+import { PortalSignInRequest } from "@domain/auth/request/PortalSignIn.request";
 import { RefreshTokenRequest } from "@domain/auth/request/RefreshToken.request";
 import { ResetPasswordRequest } from "@domain/auth/request/ResetPassword.request";
 import { SendVerificationRequest } from "@domain/auth/request/SendVerification.request";
@@ -8,11 +10,13 @@ import { SignInRequest } from "@domain/auth/request/SignIn.request";
 import { SignUpRequest } from "@domain/auth/request/SignUp.request";
 import response from "@domain/auth/response";
 import { ConfirmVerificationResponse } from "@domain/auth/response/ConfirmVerification.response";
+import { PortalSignInResponse } from "@domain/auth/response/PortalSignIn.response";
 import { SignInResponse } from "@domain/auth/response/SignIn.response";
 import { VerificationCodeResponse } from "@domain/auth/response/VerificationCode.response";
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Param, Post } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { ApiVersion } from "@shared/enum/api-version.enum";
+import { Role } from "@shared/enum/role.enum";
 
 @ApiTags("Authenticate")
 @ApiExtraModelsCustom(...response)
@@ -24,6 +28,12 @@ export class AuthController {
   @ApiResponseCustom(SignInResponse)
   signIn(@Body() request: SignInRequest) {
     return this.authService.signIn(request);
+  }
+
+  @Post("portal/sign-in")
+  @ApiResponseCustom(PortalSignInResponse)
+  portalSignIn(@Body() request: PortalSignInRequest) {
+    return this.authService.portalSignIn(request);
   }
 
   @Post("sign-up")
@@ -54,5 +64,12 @@ export class AuthController {
   @ApiResponseCustom()
   resetPassword(@Body() request: ResetPasswordRequest) {
     return this.authService.resetPassword(request);
+  }
+
+  @Post("test-send-mail/:email")
+  @Roles(Role.Member)
+  @ApiResponseCustom()
+  async testSendMail(@Param("email") email: string) {
+    return this.authService.testSendMail(email);
   }
 }

@@ -3,7 +3,7 @@ args=$(filter-out $@,$(MAKECMDGOALS))
 .EXPORT_ALL_VARIABLES:
 
 ENV_FILE ?= .env
-PROJECT=sample
+PROJECT=postgres
 
 # export .env file
 -include $(ENV_FILE)
@@ -50,3 +50,6 @@ seeding-create:
 
 seeding-apply: ## apply seed
 	npx mikro-orm seeder:run --class=${SEED_CLASS}
+
+deploy-develop:
+	bash ./scripts/deploy.sh dev $(PROJECT)

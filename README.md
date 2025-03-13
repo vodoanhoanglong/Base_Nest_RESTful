@@ -2,7 +2,8 @@
 
 1. Docker
 2. Make command
-3. NVM
+3. NodeJS
+4. NVM
 
 ### GET STARTED
 

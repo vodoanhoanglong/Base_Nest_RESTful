@@ -5,7 +5,7 @@ export function ApiExtraModelsCustom(...models: Function[]) {
   return ApiExtraModels(BaseResponse, ...models);
 }
 
-export function ApiResponseCustom(ref?: string | Function) {
+export function ApiResponseCustom(ref?: string | Function, isArray = false) {
   return ApiOkResponse({
     description: "Successful Response",
     schema: {
@@ -13,7 +13,11 @@ export function ApiResponseCustom(ref?: string | Function) {
         { $ref: getSchemaPath(BaseResponse) },
         {
           properties: {
-            data: ref ? { $ref: getSchemaPath(ref) } : { example: null },
+            data: ref
+              ? isArray
+                ? { type: "array", items: { $ref: getSchemaPath(ref) } }
+                : { $ref: getSchemaPath(ref) }
+              : { example: null },
             error: { example: null },
           },
         },
